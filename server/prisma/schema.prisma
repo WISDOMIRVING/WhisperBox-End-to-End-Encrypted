@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                  String   @id @default(uuid())
+  username            String   @unique
+  display_name        String
+  password_hash       String
+  public_key          String
+  wrapped_private_key String
+  pbkdf2_salt         String
+  created_at          DateTime @default(now())
+
+  sent_messages     Message[] @relation("SentMessages")
+  received_messages Message[] @relation("ReceivedMessages")
+}
+
+model Message {
+  id                    String   @id @default(uuid())
+  from_user_id          String
+  to_user_id            String
+  ciphertext            String
+  iv                    String
+  encrypted_key         String
+  encrypted_key_for_self String
+  created_at            DateTime @default(now())
+  delivered             Boolean  @default(false)
+
+  sender    User @relation("SentMessages", fields: [from_user_id], references: [id])
+  recipient User @relation("ReceivedMessages", fields: [to_user_id], references: [id])
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  token      String   @unique
+  user_id    String
+  expires_at DateTime
+  created_at DateTime @default(now())
+}
